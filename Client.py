@@ -2,15 +2,17 @@ import sys
 import socket
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QLabel, QLineEdit, QPushButton,
-    QTextEdit, QVBoxLayout, QWidget , QFileDialog
+    QTextEdit, QVBoxLayout, QWidget, QFileDialog
 )
+from PyQt6.QtGui import QColor
+
 
 class Client(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Client de Compilation")
-        self.setGeometry(100, 100, 400, 300)
+        self.setGeometry(100, 100, 400, 350)
 
         self.client_socket = None  # Placeholder for the socket
 
@@ -23,9 +25,12 @@ class Client(QMainWindow):
         self.port_label = QLabel("Port du serveur :")
         self.port_input = QLineEdit("10000")
 
-        # Connect button
+        # Connect button and status
         self.connect_button = QPushButton("Se connecter")
         self.connect_button.clicked.connect(self.connect_to_server)
+
+        self.connection_status = QLabel("Déconnecté")
+        self.connection_status.setStyleSheet("color: red;")  # Red for disconnected
 
         # File selection
         self.file_label = QLabel("Programme à envoyer :")
@@ -49,6 +54,7 @@ class Client(QMainWindow):
         layout.addWidget(self.port_label)
         layout.addWidget(self.port_input)
         layout.addWidget(self.connect_button)
+        layout.addWidget(self.connection_status)
         layout.addWidget(self.file_label)
         layout.addWidget(self.file_path)
         layout.addWidget(self.browse_button)
@@ -69,9 +75,13 @@ class Client(QMainWindow):
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.client_socket.connect((ip, port))
             self.result_output.setText("Connexion établie avec le serveur.")
+            self.connection_status.setText("Connecté")
+            self.connection_status.setStyleSheet("color: green;")  
             self.send_button.setEnabled(True)  # Enable the send button
         except Exception as e:
             self.result_output.setText(f"Erreur de connexion : {e}")
+            self.connection_status.setText("Déconnecté")
+            self.connection_status.setStyleSheet("color: red;") 
 
     def browse_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Choisir un fichier Python", "", "Python Files (*.py)")
@@ -93,6 +103,7 @@ class Client(QMainWindow):
             self.result_output.setText(response)
         except Exception as e:
             self.result_output.setText(f"Erreur : {e}")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -3,6 +3,7 @@ import subprocess
 import sys
 import threading
 
+
 class SimpleServer:
     def __init__(self, port):
         self.port = port
@@ -11,11 +12,13 @@ class SimpleServer:
         self.server_socket.bind(("0.0.0.0", self.port))
         self.server_socket.listen(1)
         print(f"Serveur démarré sur le port {self.port}")
+        print("Serveur en attente de connexions...")
 
-    def handle_client(self, client_socket , client_address):
+    def handle_client(self, client_socket, addr):
+        print(f"Client connecté : {addr}")
+
         if self.is_busy:
             print("Client rejeté : serveur occupé")
-            print(f"Client address: {client_address}")
             client_socket.send("Occupé, veuillez essayer un autre serveur.".encode())
             client_socket.close()
             return
@@ -36,11 +39,14 @@ class SimpleServer:
         finally:
             self.is_busy = False
             client_socket.close()
+            print(f"Connexion fermée avec le client {addr}")
+            print("En attente d'une nouvelle connexion...")
 
     def start(self):
         while True:
-            client_socket, client_address  = self.server_socket.accept()
+            client_socket, client_address = self.server_socket.accept()
             threading.Thread(target=self.handle_client, args=(client_socket, client_address)).start()
+
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 12345
