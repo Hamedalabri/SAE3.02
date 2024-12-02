@@ -29,6 +29,10 @@ class Client(QMainWindow):
         self.connect_button = QPushButton("Se connecter")
         self.connect_button.clicked.connect(self.connect_to_server)
 
+        self.disconnect_button = QPushButton("Se déconnecter")
+        self.disconnect_button.clicked.connect(self.disconnect_from_server)
+        self.disconnect_button.setEnabled(False)
+
         self.connection_status = QLabel("Déconnecté")
         self.connection_status.setStyleSheet("color: red;")  # Red for disconnected
 
@@ -54,6 +58,7 @@ class Client(QMainWindow):
         layout.addWidget(self.port_label)
         layout.addWidget(self.port_input)
         layout.addWidget(self.connect_button)
+        layout.addWidget(self.disconnect_button)
         layout.addWidget(self.connection_status)
         layout.addWidget(self.file_label)
         layout.addWidget(self.file_path)
@@ -61,6 +66,7 @@ class Client(QMainWindow):
         layout.addWidget(self.send_button)
         layout.addWidget(self.result_label)
         layout.addWidget(self.result_output)
+        layout.addWidget(self.disconnect_button)
 
         # Set central widget
         container = QWidget()
@@ -71,17 +77,42 @@ class Client(QMainWindow):
         ip = self.ip_input.text()
         port = int(self.port_input.text())
 
+
         try:
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.client_socket.connect((ip, port))
-            self.result_output.setText("Connexion établie avec le serveur.")
-            self.connection_status.setText("Connecté")
-            self.connection_status.setStyleSheet("color: green;")  
-            self.send_button.setEnabled(True)  # Enable the send button
+
+            # Check if the server is busy
+            server_response = self.client_socket.recv(1024).decode()
+            if "Occupé" in server_response:
+                self.result_output.setText("Serveur occupé. Essayez une autre adresse IP ou un autre port.")
+                self.connection_status.setText("Déconnecté")
+                self.connection_status.setStyleSheet("color: red;")
+                self.client_socket.close()
+                self.client_socket = None
+            else:
+                self.result_output.setText("Connexion établie avec le serveur.")
+                self.connection_status.setText("Connecté")
+                self.connection_status.setStyleSheet("color: green;")
+                self.send_button.setEnabled(True) # Enable the send button
+                self.disconnect_button.setEnabled(True) 
         except Exception as e:
-            self.result_output.setText(f"Erreur de connexion : {e}")
-            self.connection_status.setText("Déconnecté")
-            self.connection_status.setStyleSheet("color: red;") 
+                self.result_output.setText(f"Erreur de connexion : {e}")
+                self.connection_status.setText("Déconnecté")
+                self.connection_status.setStyleSheet("color: red;")
+    def disconnect_from_server(self):
+        if self.client_socket:
+            try:
+                self.client_socket.sendall("quit".encode())  # Inform the server to close the connection
+                self.client_socket.close()
+                self.client_socket = None
+                self.result_output.setText("Déconnecté du serveur.")
+                self.connection_status.setText("Déconnecté")
+                self.connection_status.setStyleSheet("color: red;")
+                self.send_button.setEnabled(False)
+            except Exception as e:
+                self.result_output.setText(f"Erreur lors de la déconnexion : {e}")
+            
 
     def browse_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Choisir un fichier Python", "", "Python Files (*.py)")
@@ -101,8 +132,10 @@ class Client(QMainWindow):
             self.client_socket.sendall(program_code.encode())
             response = self.client_socket.recv(4096).decode()
             self.result_output.setText(response)
+
         except Exception as e:
-            self.result_output.setText(f"Erreur : {e}")
+                 self.result_output.setText(f"Erreur : {e}")
+
 
 
 if __name__ == "__main__":

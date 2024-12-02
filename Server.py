@@ -25,15 +25,26 @@ class SimpleServer:
 
         self.is_busy = True
         try:
-            program = client_socket.recv(1024).decode()  # Réception du programme
-            if not program:
-                raise ValueError("Aucun programme reçu")
+            client_socket.send("Connecté au serveur. Envoyez votre programme.".encode())
 
-            # Exécution du programme
-            result = subprocess.run(["python3", "-c", program], capture_output=True, text=True)
-            output = result.stdout if result.returncode == 0 else result.stderr
+            while True:
+            # Receive a program from the client
+                program = client_socket.recv(1024).decode()
+                if program.strip().lower() == "quit":  # Allow the client to close the connection
+                    print(f"Client {addr} a fermé la connexion.")
+                    break
 
-            client_socket.send(output.encode())  # Envoi du résultat au client
+                if not program:
+                    raise ValueError("Aucun programme reçu")
+
+                # Execute the program
+                result = subprocess.run(["python3", "-c", program], capture_output=True, text=True)
+                output = result.stdout if result.returncode == 0 else result.stderr
+
+                # Send the result back to the client
+                client_socket.send(output.encode())
+                print(f"Programme exécuté pour {addr}, résultat envoyé.")
+
         except Exception as e:
             client_socket.send(f"Erreur : {e}".encode())
         finally:
@@ -41,6 +52,7 @@ class SimpleServer:
             client_socket.close()
             print(f"Connexion fermée avec le client {addr}")
             print("En attente d'une nouvelle connexion...")
+
 
     def start(self):
         while True:
