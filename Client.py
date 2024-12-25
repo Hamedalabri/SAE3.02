@@ -77,7 +77,6 @@ class Client(QMainWindow):
         ip = self.ip_input.text()
         port = int(self.port_input.text())
 
-
         try:
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.client_socket.connect((ip, port))
@@ -100,6 +99,7 @@ class Client(QMainWindow):
                 self.result_output.setText(f"Erreur de connexion : {e}")
                 self.connection_status.setText("Déconnecté")
                 self.connection_status.setStyleSheet("color: red;")
+
     def disconnect_from_server(self):
         if self.client_socket:
             try:
@@ -112,10 +112,9 @@ class Client(QMainWindow):
                 self.send_button.setEnabled(False)
             except Exception as e:
                 self.result_output.setText(f"Erreur lors de la déconnexion : {e}")
-            
 
     def browse_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Choisir un fichier Python", "", "Python Files (*.py)")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Choisir un fichier", "", "Code Files (*.py *.c *.cpp *.java)")
         if file_path:
             self.file_path.setText(file_path)
 
@@ -136,10 +135,9 @@ class Client(QMainWindow):
         except Exception as e:
                  self.result_output.setText(f"Erreur : {e}")
 
-
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = Client()
     window.show()
     sys.exit(app.exec())
+
