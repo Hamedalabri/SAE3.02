@@ -2,6 +2,10 @@
 
 Welcome
 
+
+Le lien vers la vidéo: https://youtu.be/BqmgFBR5n-8?feature=shared
+
+
 Un sujet plus simple
 Après avoir lu le sujet plus complet, je vous propose de travailler sur les éléments
 suivants :
